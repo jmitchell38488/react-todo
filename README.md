@@ -1,8 +1,35 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+This project is based on [React Todo MVC](https://github.com/tastejs/todomvc/tree/master/examples/react), utilising a local API
+storage and _React.Component_ instead of the uncompiled `.jsx` code.
+
+The application is constructed on the *ERN stack, minus the _M (Mongo)_.
+
+#### The API
+The API for the Todo MVC app is a single nodejs express server `api-server.js`. The server runs on port 8000, which can be changed by
+modifying the executable file.
+
+Available endpoints:
+```
+/items     [GET]
+/item      [POST]
+/item/:id  [GET, PUT, DELETE]
+```
+
+All API requests act on a single item at a time. The React app has been constructed to modify
+single items at a time.
+
 ## Available Scripts
 
 In the project directory, you can run:
+
+### `node api-server.js`
+
+Runs the API server in development mode in the background.<br/>
+Open [http://localhost:8000](http://localhost:8000) to view it in the browser.
+
+To enable hot-reloading, install `nodemon` with `npm install nodemon`. Just keep in mind that the data store is local
+and contained within the instance of node, so a restart will remove all todo items.
 
 ### `npm start`
 
