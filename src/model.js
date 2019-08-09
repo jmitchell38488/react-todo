@@ -2,20 +2,9 @@ const API_URL = 'http://localhost:8000/';
 
 export default class Model {
 
-    constructor() {
-        this.onChanges = [];
-        this.todos = [];
-    }
+    todos = [];
 
-    subscribe(onChange) {
-        this.onChanges.push(onChange);
-    }
-
-    inform() {
-        this.onChanges.forEach(cb => cb());
-    }
-
-    async toggleAll(state) {
+    async toggleAll(todos, state) {
         const promises = this.todos.map(async todo => {
             const response = await fetch(API_URL + 'item/' + todo.id, {
                 method: 'PUT',

@@ -1,9 +1,110 @@
 import React from 'react';
-import { Router } from 'director/build/director';
-import { ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS, ENTER_KEY } from '../utils';
-import { Footer, Item } from './index';
+import { observer } from 'mobx-react';
+import { observable } from 'mobx';
+import { ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS, ENTER_KEY } from '../../utils';
+import { Footer, Item } from '../index';
+import './todolist.css';
+import  TodoItem from '../todoitem';
 
-class Todo extends React.Component {
+const TodoList = observer(({store}) => {
+    return (
+        <div className="todo-container">
+            <header className="header">
+                <h1>todos</h1>
+                <TodoInputField store={store}/>
+            </header>
+            {renderCurrentView(store)}
+            {renderFooter(store)}
+        </div>
+    );
+});
+
+const TodoInputField = observer(class NewTodoField extends React.Component {
+
+    state = {
+        text: ''
+    };
+
+    handleKeyDown = (event) => {
+        if (event.keyCode !== ENTER_KEY) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const value = this.state.text.trim();
+        if (value) {
+            this.props.store.addTodo(value);
+            this.setState(() => (
+                {text: ''}
+            ));
+        }
+    };
+
+    handleOnChange = (event) => {
+        const value = event.target.value;
+        this.setState(() => (
+            {text: value}
+        ));
+    };
+
+    render() {
+        return <input
+            className="new-todo"
+            placeholder="What needs to be done?"
+            value={this.state.text}
+            onKeyDown={this.handleKeyDown}
+            onChange={this.handleOnChange}
+            autoFocus={true}
+        />;
+    }
+
+});
+
+function renderCurrentView(store) {
+
+    //@computed
+    let todoItems = null;
+    if (store.todoList.length > 0) {
+        todoItems = store.todoList.map(todo => {
+            let id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            return <TodoItem key={id} todo={todo}/>
+        });
+    }
+
+    return (
+        <section className="main">
+            <input id="toggle-all" className="toggle-all" type="checkbox"/>
+            <label htmlFor="toggle-all"/>
+            <ul className="todo-list">
+                {todoItems}
+            </ul>
+        </section>
+    );
+}
+
+function renderFooter(store) {
+    const activeCount = store.activeTodos.length;
+    const completedCount = store.completedTodos.length;
+
+    return (
+        <React.Fragment>
+            <Footer
+                count={activeCount}
+                completedCount={completedCount}
+                nowShowing={store.currentView.nowShowing}
+                //onClearCompleted={this.clearCompleted}
+            />
+        </React.Fragment>
+    )
+}
+
+
+
+
+
+
+class TodoListAAA extends React.Component {
 
     constructor(props) {
         super(props);
@@ -13,16 +114,6 @@ class Todo extends React.Component {
             newTodo: ''
         };
     }
-
-    componentDidMount = () => {
-        const setState = this.setState;
-        const router = Router({
-            '/': setState.bind(this, {nowShowing: ALL_TODOS}),
-            '/active': setState.bind(this, {nowShowing: ACTIVE_TODOS}),
-            '/completed': setState.bind(this, {nowShowing: COMPLETED_TODOS})
-        });
-        router.init('/');
-    };
 
     handleChange = (event) => {
         this.setState({newTodo: event.target.value});
@@ -75,6 +166,10 @@ class Todo extends React.Component {
     };
 
     render() {
+        return <div><p>Hello!</p></div>
+
+
+        /*
         let footer, main;
         const todos = this.props.model.todos;
         const showTodos = todos.filter(todo => {
@@ -148,8 +243,10 @@ class Todo extends React.Component {
                 {footer}
             </div>
         );
+        */
     }
 
 }
 
-export default Todo;
+//export default TodoListAAA;
+export default TodoList;

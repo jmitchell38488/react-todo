@@ -1,22 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Todo } from './components';
+import {App} from './components';
 import Model from './model';
-
-// ========================================
+import {router, fetch, TodoStore} from './store';
+import {Provider} from "mobx-react";
 
 const model = new Model();
+const todoStore = new TodoStore(fetch, model);
+router(todoStore);
 
-let render = () => {
-    ReactDOM.render(
-        <Todo model={model} />,
-        document.getElementById('root')
-    );
-};
-
-model
-    .loadAll()
-    .then(() => {
-        model.subscribe(render);
-        render();
-    });
+ReactDOM.render(
+    <App store={todoStore} />,
+    document.getElementById('root')
+);
