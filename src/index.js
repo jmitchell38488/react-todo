@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import {App} from './components';
 import Model from './model';
 import {router, fetch, TodoStore} from './store';
-import {Provider} from "mobx-react";
 
 const model = new Model();
 const todoStore = new TodoStore(fetch, model);

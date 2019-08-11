@@ -2,10 +2,8 @@ const API_URL = 'http://localhost:8000/';
 
 export default class Model {
 
-    todos = [];
-
     async toggleAll(todos, state) {
-        const promises = this.todos.map(async todo => {
+        const promises = todos.map(async todo => {
             const response = await fetch(API_URL + 'item/' + todo.id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -25,44 +23,34 @@ export default class Model {
             return rItem.data;
         });
 
-        this.todos = await Promise.all(promises);
-        this.inform();
+        return await Promise.all(promises);
     }
 
-    async toggle(item) {
-        const promises = this.todos.map(async todo => {
-            if (todo !== item) {
-                return todo;
-            }
-
-            const response = await fetch(API_URL + 'item/' + todo.id, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                mode: 'cors',
-                body: JSON.stringify({
-                    title: todo.title,
-                    completed: !todo.completed
-                })
-            });
-
-            const rItem = await response.json();
-            if (rItem.status !== 200) {
-                console.error(rItem);
-                throw new Error('Could not store todo item');
-            }
-
-            todo.completed = !todo.completed;
-            return todo;
+    async toggle(todo) {
+        const response = await fetch(API_URL + 'item/' + todo.id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify({
+                title: todo.title,
+                completed: !todo.completed
+            })
         });
 
-        this.todos = await Promise.all(promises);
-        this.inform();
+        const rItem = await response.json();
+        if (rItem.status !== 200) {
+            console.error(rItem);
+            throw new Error('Could not store todo item');
+        }
+
+        todo.completed = !todo.completed;
+        return todo;
     }
 
-    async add(title) {
+    async add(todo) {
         let item = {
-            title: title,
-            completed: false
+            title: todo.task,
+            completed: todo.completed
         };
 
         const response = await fetch(API_URL + 'item', {
@@ -79,46 +67,32 @@ export default class Model {
             throw new Error('Could not store todo item');
         }
 
-        this.todos.push(rItem.data);
-        this.inform();
+        return rItem.data
     }
 
-    async save(item, text) {
-        const promises = this.todos.map(async todo => {
-            if (todo !== item) {
-                return todo;
-            }
+    async save(todo) {
+        let item = {
+            title: todo.task,
+            completed: todo.completed
+        };
 
-            const response = await fetch(API_URL + 'item/' + todo.id, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                mode: 'cors',
-                body: JSON.stringify({
-                    title: text,
-                    completed: todo.completed
-                })
-            });
-
-            const rItem = await response.json();
-            if (rItem.status !== 200) {
-                console.error(rItem);
-                throw new Error('Could not store todo item');
-            }
-
-            return rItem.data;
+        const response = await fetch(API_URL + 'item/' + todo.id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify(item)
         });
 
-        this.todos = await Promise.all(promises);
-        this.inform();
-    }
-
-    async destroy(item) {
-        const todo = this.todos.find(e => e.id === item.id);
-        if (!todo || todo === void 0) {
-            console.error(item);
-            throw new Error('Could not delete todo item');
+        const rItem = await response.json();
+        if (rItem.status !== 200) {
+            console.error(rItem);
+            throw new Error('Could not store todo item');
         }
 
+        return rItem.data;
+    }
+
+    async destroy(todo) {
         const response = await fetch(API_URL + 'item/' + todo.id, {
             method: 'DELETE',
             mode: 'cors',
@@ -131,8 +105,7 @@ export default class Model {
             throw new Error('Could not delete todo item');
         }
 
-        await this.loadAll();
-        this.inform();
+        return todo;
     }
 
     async loadAll() {
@@ -148,13 +121,12 @@ export default class Model {
             throw new Error('Could not fetch todo items');
         }
 
-        this.todos = rItem.list;
+        return rItem.list;
     }
 
-    async clearCompleted() {
-        const nTodos = this.todos.filter(todo => !todo.completed);
+    async clearCompleted(todos) {
         const promises = [];
-        this.todos.forEach(async todo => {
+        todos.forEach(async todo => {
             // Skip active todos
             if (!todo.completed) {
                 return true;
@@ -175,9 +147,7 @@ export default class Model {
             }
         });
 
-        await Promise.all(promises);
-        this.todos = nTodos;
-        this.inform();
+        return await Promise.all(promises);
     }
 
 }

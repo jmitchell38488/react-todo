@@ -13,6 +13,8 @@ const TodoItem = observer(class TodoItem extends React.Component {
             editing: false,
             editText: props.todo.task
         };
+
+        this.props.todo.autoSave = true;
     }
 
     componentDidUpdate = (prevProps) => {
@@ -24,18 +26,17 @@ const TodoItem = observer(class TodoItem extends React.Component {
     };
 
     handleOnToggle = () => {
-        this.props.todo.completed = !this.props.todo.completed;
+        this.props.todo.toggle();
     };
 
     handleOnDoubleClick = () => {
         this.setState((prevState, props) => (
             {editText: props.todo.task, editing: true}
         ));
-        console.log('editing...');
     };
 
     handleOnDestroyClick = () => {
-        this.props.todo.delete();
+        this.props.todo.remove();
     };
 
     handleOnSubmitChanges = () => {

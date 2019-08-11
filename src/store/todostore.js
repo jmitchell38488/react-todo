@@ -1,5 +1,4 @@
 import {observable, computed, action, decorate} from 'mobx';
-import { fromPromise } from 'mobx-utils';
 import Todo from './model/todo';
 
 export const ALL_TODOS = 'all';
@@ -19,9 +18,7 @@ class TodoStore {
 
     //@observable
     currentView = {
-        nowShowing: ALL_TODOS,
-        editing: null,
-        newTodo: ''
+        nowShowing: ALL_TODOS
     };
 
     constructor(fetch, model) {
@@ -32,23 +29,36 @@ class TodoStore {
 
     loadTodos() {
         this.isLoading = true;
-        setTimeout(() => {
-            const todo = new Todo(this);
-            todo.task = 'Buy milk';
-            this.todos.push(todo);
-            this.isLoading = false;
-        }, 1500);
+        this.model.loadAll()
+            .then(todos => {
+                todos.forEach(todo => {
+                    const item = new Todo(this);
+                    item.updateFromJson(todo);
+                    item.id = todo.id;
+                    this.todos.push(item);
+                });
+                this.isLoading = false;
+            })
+            .catch(e => {
+                console.error(e);
+                this.isLoading = false;
+            });
     }
 
     removeTodo(todo) {
         this.todos.splice(this.todos.indexOf(todo), 1);
-        todo.dispose();
+        this.model.destroy(todo);
     }
 
     addTodo(task) {
         const todo = new Todo(this);
         todo.task = task;
-        this.todos.push(todo);
+        this.model.add(todo)
+            .then((t) => {
+                todo.updateFromJson(t);
+                todo.id = t.id;
+                this.todos.push(todo);
+            });
     }
 
     //@computed
@@ -65,11 +75,15 @@ class TodoStore {
 
     //@computed
     get todoList() {
-        if (this.currentView.nowShowing === ALL_TODOS) {
-            return this.todos;
+        if (this.currentView.nowShowing === ACTIVE_TODOS) {
+            return this.todos.filter(e => !e.completed);
         }
 
-        return this.todos.filter(e => this.currentView.nowShowing === ALL_TODOS && e.completed);
+        if (this.currentView.nowShowing === COMPLETED_TODOS) {
+            return this.todos.filter(e => e.completed);
+        }
+
+        return this.todos;
     }
 
     //@computed
@@ -83,29 +97,28 @@ class TodoStore {
     }
 
     //@action
+    toggleTodos(state) {
+        this.todoList.forEach(e => e.completed = state);
+    }
+
+    //@action
     showAllTodos() {
         this.currentView = {
-            nowShowing: ALL_TODOS,
-            editing: null,
-            newTodo: ''
+            nowShowing: ALL_TODOS
         };
     }
 
     //@action
     showActiveTodos() {
         this.currentView = {
-            nowShowing: ACTIVE_TODOS,
-            editing: null,
-            newTodo: ''
+            nowShowing: ACTIVE_TODOS
         };
     }
 
     //@action
     showCompletedTodos() {
         this.currentView = {
-            nowShowing: COMPLETED_TODOS,
-            editing: null,
-            newTodo: ''
+            nowShowing: COMPLETED_TODOS
         };
     }
 }
@@ -118,6 +131,7 @@ decorate(TodoStore, {
     todoList: computed,
     activeTodos: computed,
     completedTodos: computed,
+    toggleTodos: action,
     showAllTodos: action,
     showActiveTodos: action,
     showCompletedTodos: action

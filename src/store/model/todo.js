@@ -1,9 +1,11 @@
 import {observable, reaction, computed, decorate} from 'mobx';
-import uuid from 'node-uuid';
 
 class Todo {
 
     id = null;
+    created = null;
+    updated = null;
+    deleted = false;
 
     //@observable
     completed = false;
@@ -12,27 +14,28 @@ class Todo {
     task = "";
 
     store = null;
-
-    autoSave = false;
     saveHandler = null;
+    autoSave = false;
 
-    constructor(store, id = uuid.v4()) {
+    constructor(store) {
         this.store = store;
-        this.id = id;
 
         this.saveHandler = reaction(
             () => this.asJson,
             (json) => {
-                console.log(json);
-                /*if (this.autoSave) {
-                    //this.store.transportLayer.saveTodo(json);
-                }*/
+                if (this.autoSave) {
+                    if (this.deleted) {
+                        this.store.model.destroy(json);
+                    } else {
+                        this.store.model.save(json);
+                    }
+                }
             }
         )
     }
 
-    delete() {
-        //this.store.transportLayer.deleteTodo(this.id);
+    remove() {
+        this.deleted = true;
         this.store.removeTodo(this);
     }
 
@@ -46,8 +49,18 @@ class Todo {
     }
 
     updateFromJson(json) {
-        this.task = json.task;
+        this.autoSave = false;
+
+        this.task = json.task || json.title;
         this.completed = json.completed;
+        this.created = json.created || null;
+        this.updated = json.updated || null;
+
+        this.autoSave = true;
+    }
+
+    toggle() {
+        this.completed = !this.completed;
     }
 
     dispose() {
@@ -59,7 +72,7 @@ class Todo {
 decorate(Todo, {
     completed: observable,
     task: observable,
-    asJson: computed
+    asJson: computed,
 });
 
 export default Todo;

@@ -3,16 +3,16 @@ import { autorun } from 'mobx';
 
 export function startRouter(store) {
     // update state on url change
-    const router = Router({
+    const router = new Router({
             '/': () => store.showAllTodos(),
             '/active': () => store.showActiveTodos(),
             '/completed': () => store.showCompletedTodos()
         }).configure({
             notfound: () => store.showAllTodos(),
-            html5history: true
+            html5history: false
         });
 
-    router.init('/');
+    router.init();
 
     // update url on state changes
     autorun(() => {
@@ -20,6 +20,6 @@ export function startRouter(store) {
         if (path !== window.location.pathname) {
             window.history.pushState(null, null, path)
         }
-    })
+    });
 
 }
